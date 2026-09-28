@@ -1,0 +1,158 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Gemini Generative Language API (minimal)",
+    "version": "1.0.0",
+    "description": "Minimal spec for generateContent, used by the Cadastros/Antifraude module (Retool) to send text + images/PDFs to Gemini for document analysis."
+  },
+  "servers": [
+    {
+      "url": "https://generativelanguage.googleapis.com"
+    }
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "query",
+        "name": "key"
+      }
+    },
+    "schemas": {
+      "Part": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "inlineData": {
+            "type": "object",
+            "properties": {
+              "mimeType": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string",
+                "description": "base64-encoded file bytes"
+              }
+            }
+          }
+        }
+      },
+      "Content": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "model"
+            ]
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Part"
+            }
+          }
+        }
+      },
+      "GenerationConfig": {
+        "type": "object",
+        "properties": {
+          "temperature": {
+            "type": "number"
+          },
+          "maxOutputTokens": {
+            "type": "integer"
+          }
+        }
+      },
+      "GenerateContentRequest": {
+        "type": "object",
+        "required": [
+          "contents"
+        ],
+        "properties": {
+          "contents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Content"
+            }
+          },
+          "systemInstruction": {
+            "$ref": "#/components/schemas/Content"
+          },
+          "generationConfig": {
+            "$ref": "#/components/schemas/GenerationConfig"
+          }
+        }
+      },
+      "GenerateContentResponse": {
+        "type": "object",
+        "properties": {
+          "candidates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "content": {
+                  "$ref": "#/components/schemas/Content"
+                },
+                "finishReason": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/v1beta/models/{model}:generateContent": {
+      "post": {
+        "operationId": "generateContent",
+        "summary": "Generate content (text + vision) from Gemini",
+        "parameters": [
+          {
+            "name": "model",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "default": "gemini-2.5-flash"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateContentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateContentResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
